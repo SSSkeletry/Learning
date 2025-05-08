@@ -1,0 +1,69 @@
+.space {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.earth-wrapper {
+  position: relative;
+  width: 400px;
+  height: 400px;
+}
+
+.earth {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.moon {
+  position: absolute;
+  width: 72px;
+  animation: orbita 6s linear infinite;
+}
+
+@keyframes orbita {
+  0% {
+    top: 0px;
+    left: 160px;
+    z-index: 0;
+    width: 72px;
+    transform: rotate(0deg);
+  }
+
+  24% {
+    z-index: 0;
+  }
+
+  25% {
+    top: 80px;
+    left: 370px;
+    z-index: 2;
+  }
+
+  50% {
+    top: 160px;
+    left: 160px;
+    width: 100px;
+    z-index: 2;
+  }
+
+  74% {
+    z-index: 2;
+  }
+
+  75% {
+    top: 330px;
+    left: 20px;
+    z-index: 0;
+  }
+
+  100% {
+    top: 0px;
+    left: 160px;
+    width: 72px;
+    z-index: 0;
+    transform: rotate(360deg);
+  }
+}
