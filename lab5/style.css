@@ -1,0 +1,8 @@
+.project-img {
+  height: 200px;
+  object-fit: cover;
+}
+
+.progress-bar {
+  background-color: #007bff;
+}
