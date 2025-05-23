@@ -6,7 +6,69 @@
     <link type="text/css" rel="stylesheet" href="media/layout.css" />    
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 </head>
-<body>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: transparent;
+  }
+
+  .modal-form {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .modal-form h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+  }
+
+  .modal-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+
+  .modal-form input[type="text"],
+  .modal-form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+
+  .modal-form .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-form .actions input[type="submit"] {
+    background-color: #1a9d13;
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .modal-form .actions a {
+    color: #888;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .modal-form .actions a:hover {
+    text-decoration: underline;
+  }
+</style>
+
 <?php
 require_once 'db.php';
 
@@ -19,36 +81,37 @@ $end = date("Y-m-d H:i:s", strtotime($end_raw));
 
 $rooms = $db->query('SELECT * FROM rooms');
 ?>
-<form id="f" action="back_create.php" method="post" style="padding:20px;">
-    <h1>New Reservation</h1>
 
-    <div>Name:</div>
-    <div><input type="text" id="name" name="name" value="" required /></div>
+<div class="modal-form">
+  <h2>Нове бронювання</h2>
+  <form id="f" action="back_create.php" method="post">
+    <label>Ім’я гостя:</label>
+    <input type="text" name="name" required />
 
-    <div>Start:</div>
-    <div><input type="text" id="start" name="start" value="<?= htmlspecialchars($start) ?>" readonly /></div>
+    <label>Початок:</label>
+    <input type="text" name="start" value="<?= htmlspecialchars($start) ?>" readonly />
 
-    <div>End:</div>
-    <div><input type="text" id="end" name="end" value="<?= htmlspecialchars($end) ?>" readonly /></div>
+    <label>Кінець:</label>
+    <input type="text" name="end" value="<?= htmlspecialchars($end) ?>" readonly />
 
-    <div>Room:</div>
-    <div>
-        <select id="room" name="room" required>
-            <?php foreach ($rooms as $room): ?>
-                <?php
-                    $id = (int)$room['id'];
-                    $name = htmlspecialchars($room['NAME']);
-                    $selected = ($resource_id === $id) ? ' selected' : '';
-                ?>
-                <option value="<?= $id ?>"<?= $selected ?>><?= $name ?></option>
-            <?php endforeach; ?>
-        </select>
+    <label>Кімната:</label>
+    <select name="room" required>
+      <?php foreach ($rooms as $room): ?>
+        <?php
+          $id = (int)$room['id'];
+          $name = htmlspecialchars($room['NAME']);
+          $selected = ($resource_id === $id) ? ' selected' : '';
+        ?>
+        <option value="<?= $id ?>"<?= $selected ?>><?= $name ?></option>
+      <?php endforeach; ?>
+    </select>
+
+    <div class="actions">
+      <input type="submit" value="Зберегти" />
+      <a href="#" onclick="parent.DayPilot.Modal.close(); return false;">Скасувати</a>
     </div>
+  </form>
+</div>
 
-    <div class="space">
-        <input type="submit" value="Save" />
-        <a href="javascript:window.close();">Cancel</a>
-    </div>
-</form>
 </body>
 </html>
