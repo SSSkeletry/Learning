@@ -55,7 +55,17 @@
         </div>
       </div>
     </header>
+<div>
+  <label for="filter">Фільтр кімнат:</label>
+  <select id="filter">
+    <option value="0">Всі</option>
+    <option value="1">Одномісні</option>
+    <option value="2">Двомісні</option>
+    <option value="4">Сімейні</option>
+</select>
 
+</div>
+<button id="addRoomBtn">Додати кімнату</button>
     <main>
       <div style="float: left">
         <div id="dp"></div>
@@ -86,7 +96,16 @@
     { groupBy: "Month", format: "MMMM yyyy" },
     { groupBy: "Day", format: "d" }
   ];
-
+$("#addRoomBtn").click(function() {
+    var modal = new DayPilot.Modal();
+    modal.closed = function() {
+      var data = this.result;
+      if (data && data.result === "OK") {
+        loadResources();
+      }
+    };
+    modal.showUrl("room_new.php");
+  });
   dp.onBeforeResHeaderRender = function(args) {
     var beds = function(count) {
       return count + " ліж" + (count > 1 ? "ка" : "ко");
@@ -129,13 +148,107 @@ dp.onTimeRangeSelected = function (args) {
     };
   modal.showUrl("edit.php?id=" + args.e.id());
 };
+
+  dp.onEventMoved = function (args) {
+    $.post("back_move.php", 
+    {
+        id: args.e.id(),
+        newStart: args.newStart.toString(),
+        newEnd: args.newEnd.toString(),
+        newResource: args.newResource
+    }, 
+    function(data) {
+        dp.message(data.message);
+    });
+  };
+
+  dp.eventDeleteHandling = "Update";
+
+dp.onEventDeleted = function(args) {
+  $.post("back_delete.php", 
+  {
+      id: args.e.id()
+  }, 
+  function() {
+      dp.message("Deleted.");
+  });
+};
+
+dp.onBeforeEventRender = function(args) {
+  var start = new DayPilot.Date(args.e.start);
+  var end = new DayPilot.Date(args.e.end);
+
+  var today = DayPilot.Date.today();
+  var now = new DayPilot.Date();
+
+  args.e.html = args.e.text + " (" + start.toString("M/d/yyyy") + " - " + end.toString("M/d/yyyy") + ")";
+
+  switch (args.e.status) {
+      case "new":
+          var in2days = today.addDays(1);
+
+          if (start < in2days) {
+              args.e.barColor = 'red';
+              args.e.toolTip = 'Застаріле (не підтверджено вчасно)';
+          }
+          else {
+              args.e.barColor = 'orange';
+              args.e.toolTip = 'Новий';
+          }
+          break;
+      case "confirmed":
+          var arrivalDeadline = today.addHours(18);
+
+          if (start < today || (start.getDatePart() === today.getDatePart() && now > arrivalDeadline)) { 
+              args.e.barColor = "#f41616";  
+              args.e.toolTip = 'Пізнє прибуття';
+          }
+          else {
+              args.e.barColor = "green";
+              args.e.toolTip = "Підтверджено";
+          }
+          break;
+      case 'arrived':
+          var checkoutDeadline = today.addHours(10);
+
+          if (end < today || (end.getDatePart() === today.getDatePart() && now > checkoutDeadline)) { 
+              args.e.barColor = "#f41616";  
+              args.e.toolTip = "Пізній виїзд";
+          }
+          else
+          {
+              args.e.barColor = "#1691f4";  
+              args.e.toolTip = "Прибув";
+          }
+          break;
+      case 'checkedout': 
+          args.e.barColor = "gray";
+          args.e.toolTip = "Перевірено";
+          break;
+      default:
+          args.e.toolTip = "Невизначений стан";
+          break;
+  }
+
+  args.e.html = args.e.html + "<br /><span style='color:gray'>" + args.e.toolTip + "</span>";
+  
+  var paid = args.e.paid;
+  var paidColor = "#aaaaaa";
+
+  args.e.areas = [
+      { bottom: 10, right: 4, html: "<div style='color:" + paidColor + "; font-size: 8pt;'>Paid: " + paid + "%</div>", v: "Visible"},
+      { left: 4, bottom: 8, right: 4, height: 2, html: "<div style='background-color:" + paidColor + "; height: 100%; width:" + paid + "%'></div>", v: "Visible" }
+  ];
+
+};
   function loadResources() {
-    $.post("back_rooms.php", function(data) {
+    $.post("back_rooms.php",{ capacity: $("#filter").val() }, function(data) {
       dp.resources = data;
       dp.update();
     }).fail(function(jqXHR, textStatus, errorThrown) {
       console.error("Помилка завантаження кімнат:", textStatus, errorThrown);
     });
+    
   }
 
   function loadEvents() {
@@ -153,7 +266,13 @@ dp.onTimeRangeSelected = function (args) {
       console.error("Вміст відповіді:", jqXHR.responseText);
     });
   }
-
+  
+    $(document).ready(function() {
+    $("#filter").change(function() {
+        loadResources();
+    });
+  });
+  dp.allowEventOverlap = false
   dp.init();
   loadResources();
   loadEvents();
